@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use App\Models\Post;
+
 //return type View
 use Illuminate\View\View;
 
@@ -12,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 
 //import Facade "Storage"
 use Illuminate\Support\Facades\Storage;
+
 
 class PostController extends Controller
 {
@@ -23,10 +26,10 @@ class PostController extends Controller
     public function index(): View
     {
         //get posts
-        Post::latest()->paginate(5);
+        $posts = Post::latest()->paginate(5); // Menggunakan $posts
 
         //render view with posts
-        return view('posts.index', compact('posts'));
+        return view('posts.index', compact('posts')); // Konsisten dengan $posts
     }
 
     /**
@@ -36,7 +39,7 @@ class PostController extends Controller
      */
     public function create(): View
     {
-        return view('create');
+        return view('posts.create');
     }
 
     /**
@@ -45,8 +48,7 @@ class PostController extends Controller
      * @param  mixed $request
      * @return RedirectResponse
      */
-
-    public function store($request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         //validate form
         $this->validate($request, [
@@ -73,41 +75,41 @@ class PostController extends Controller
     /**
      * show
      *
-     * @param  mixed $id
+     * @param  string $id
      * @return View
      */
-    public function show(): View
+    public function show(string $id): View
     {
         //get post by ID
         $post = Post::findOrFail($id);
 
         //render view with post
-        return view('posts.show', ('post'));
+        return view('posts.show', compact('post'));
     }
 
     /**
      * edit
      *
-     * @param  mixed $id
-     * @return void
+     * @param  string $id
+     * @return View
      */
     public function edit(string $id): View
     {
         //get post by ID
-        $post = Post::findOrFail($id);
+        $post = Post::findOrFail($id); // Menggunakan $post
 
         //render view with post
-        return view('posts.edit', compact('postsss'));
+        return view('posts.edit', compact('post')); // Konsisten dengan $post
     }
 
     /**
      * update
      *
-     * @param  mixed $request
-     * @param  mixed $id
+     * @param  Request $request
+     * @param  string $id
      * @return RedirectResponse
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, string $id): RedirectResponse
     {
         //validate form
         $this->validate($request, [
@@ -131,7 +133,7 @@ class PostController extends Controller
 
             //update post with new image
             $post->update([
-                'images'     => $image->hashName(),
+                'image'     => $image->hashName(),
                 'title'     => $request->title,
                 'content'   => $request->content
             ]);
@@ -152,22 +154,181 @@ class PostController extends Controller
     /**
      * destroy
      *
-     * @param  mixed $post
-     * @return void
+     * @param  string $id
+     * @return RedirectResponse
      */
-
     public function destroy(string $id): RedirectResponse
     {
         //get post by ID
         $post = Post::findOrFail($id);
 
         //delete image
-        Storage::delete('public/po  sts/'. $post->image);
+        Storage::delete('public/posts/'. $post->image);
 
         //delete post
-        $post->deled();
+        $post->delete();
 
         //redirect to index
         return redirect()->route('posts.index')->with(['success' => 'Data Berhasil Dihapus!']);
     }
 }
+
+
+// class PostController extends Controller
+// {
+//     /**
+//      * index
+//      *
+//      * @return View
+//      */
+//     public function index(): View
+//     {
+//         //get posts
+//         $post = Post::latest()->paginate(5);
+
+//         //render view with posts
+//         return view('posts.index', compact('posts'));
+//     }
+
+//     /**
+//      * create
+//      *
+//      * @return View
+//      */
+//     public function create(): View
+//     {
+//         return view('posts.create');
+//     }
+
+//     /**
+//      * store
+//      *
+//      * @param  mixed $request
+//      * @return RedirectResponse
+//      */
+
+//     public function store(Request $request): RedirectResponse
+//     {
+//         //validate form
+//         $this->validate($request, [
+//             'image'     => 'required|image|mimes:jpeg,jpg,png|max:2048',
+//             'title'     => 'required|min:5',
+//             'content'   => 'required|min:10'
+//         ]);
+
+//         //upload image
+//         $image = $request->file('image');
+//         $image->storeAs('public/posts', $image->hashName());
+
+//         //create post
+//         Post::create([
+//             'image'     => $image->hashName(),
+//             'title'     => $request->title,
+//             'content'   => $request->content
+//         ]);
+
+//         //redirect to index
+//         return redirect()->route('posts.index')->with(['success' => 'Data Berhasil Disimpan!']);
+//     }
+
+//     /**
+//      * show
+//      *
+//      * @param  string $id
+//      * @return View
+//      */
+//     public function show(string $id): View
+//     {
+//         //get post by ID
+//         $post = Post::findOrFail($id);
+
+//         //render view with post
+//         return view('posts.show', compact('post'));
+//     }
+
+//     /**
+//      * edit
+//      *
+//      * @param  string $id
+//      * @return View
+//      */
+//     public function edit(string $id): View
+//     {
+//         //get post by ID
+//         $posts = Post::findOrFail($id);
+
+//         //render view with post
+//         return view('posts.edit', compact('posts'));
+//     }
+
+//     /**
+//      * update
+//      *
+//      * @param  Request $request
+//      * @param  string $id
+//      * @return RedirectResponse
+//      */
+//     public function update(Request $request, string $id): RedirectResponse
+//     {
+//         //validate form
+//         $this->validate($request, [
+//             'image'     => 'image|mimes:jpeg,jpg,png|max:2048',
+//             'title'     => 'required|min:5',
+//             'content'   => 'required|min:10'
+//         ]);
+
+//         //get post by ID
+//         $post = Post::findOrFail($id);
+
+//         //check if image is uploaded
+//         if ($request->hasFile('image')) {
+
+//             //upload new image
+//             $image = $request->file('image');
+//             $image->storeAs('public/posts', $image->hashName());
+
+//             //delete old image
+//             Storage::delete('public/posts/'.$post->image);
+
+//             //update post with new image
+//             $post->update([
+//                 'images'     => $image->hashName(),
+//                 'title'     => $request->title,
+//                 'content'   => $request->content
+//             ]);
+
+//         } else {
+
+//             //update post without image
+//             $post->update([
+//                 'title'     => $request->title,
+//                 'content'   => $request->content
+//             ]);
+//         }
+
+//         //redirect to index
+//         return redirect()->route('posts.index')->with(['success' => 'Data Berhasil Diubah!']);
+//     }
+
+//     /**
+//      * destroy
+//      *
+//      * @param  mixed $post
+//      * @return void
+//      */
+
+//     public function destroy(string $id): RedirectResponse
+//     {
+//         //get post by ID
+//         $post = Post::findOrFail($id);
+
+//         //delete image
+//         Storage::delete('public/posts/'. $post->image);
+
+//         //delete post
+//         $post->delete();
+
+//         //redirect to index
+//         return redirect()->route('posts.index')->with(['success' => 'Data Berhasil Dihapus!']);
+//     }
+// }
